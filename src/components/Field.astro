@@ -1,0 +1,220 @@
+---
+// Figura 3D abstracta: una nube de partículas con forma de nudo que
+// se aparta del cursor y se dispersa al hacer scroll.
+interface Props {
+  mode?: 'hero' | 'quiet';
+}
+const { mode = 'quiet' } = Astro.props;
+---
+
+<div class="field" data-mode={mode} aria-hidden="true">
+  <canvas></canvas>
+</div>
+
+<style>
+  .field {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    /* Respaldo estático si no hay WebGL o el usuario prefiere menos movimiento */
+    background:
+      radial-gradient(42vmax 42vmax at 74% 42%, rgba(122, 92, 255, 0.22), transparent 62%),
+      radial-gradient(30vmax 30vmax at 12% 88%, rgba(201, 187, 255, 0.07), transparent 60%);
+  }
+  .field[data-mode='quiet'] {
+    background: radial-gradient(40vmax 40vmax at 85% 0%, rgba(122, 92, 255, 0.12), transparent 62%);
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+  }
+  .field.ready canvas { opacity: 1; }
+</style>
+
+<script>
+  const root = document.querySelector<HTMLElement>('.field');
+  const canvas = root?.querySelector('canvas');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (root && canvas && !reduce) {
+    import('three').then((THREE) => start(THREE, root, canvas)).catch(() => {});
+  }
+
+  function start(THREE: typeof import('three'), root: HTMLElement, canvas: HTMLCanvasElement) {
+    let renderer: import('three').WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'high-performance' });
+    } catch {
+      return; // sin WebGL: se queda el respaldo estático
+    }
+
+    const quiet = root.dataset.mode === 'quiet';
+    const small = window.innerWidth < 760;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(dpr);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50);
+    camera.position.set(0, 0, 6.2);
+
+    // Posiciones de origen: superficie de un nudo tórico, con un poco de ruido
+    const knot = new THREE.TorusKnotGeometry(1.25, 0.42, small ? 190 : 340, small ? 16 : 26, 2, 3);
+    const src = knot.attributes.position.array as Float32Array;
+    const count = src.length / 3;
+    const from = new Float32Array(count * 3);
+    const to = new Float32Array(count * 3);
+    const seed = new Float32Array(count);
+
+    for (let i = 0; i < count; i++) {
+      const j = (Math.random() - 0.5) * 0.04;
+      from[i * 3] = src[i * 3] + j;
+      from[i * 3 + 1] = src[i * 3 + 1] + (Math.random() - 0.5) * 0.04;
+      from[i * 3 + 2] = src[i * 3 + 2] + (Math.random() - 0.5) * 0.04;
+      // Destino: campo disperso que llena la pantalla
+      to[i * 3] = (Math.random() - 0.5) * 15;
+      to[i * 3 + 1] = (Math.random() - 0.5) * 9;
+      to[i * 3 + 2] = (Math.random() - 0.5) * 6 - 1.5;
+      seed[i] = Math.random();
+    }
+    knot.dispose();
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(from, 3));
+    geo.setAttribute('aTo', new THREE.BufferAttribute(to, 3));
+    geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+
+    const uniforms = {
+      uTime: { value: 0 },
+      uMorph: { value: quiet ? 1 : 0 },
+      uMouse: { value: new THREE.Vector3(99, 99, 0) },
+      uScale: { value: dpr },
+      uOffset: { value: new THREE.Vector3() },
+      uSpin: { value: 0 },
+    };
+
+    const mat = new THREE.ShaderMaterial({
+      uniforms,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      vertexShader: /* glsl */ `
+        uniform float uTime, uMorph, uScale, uSpin;
+        uniform vec3 uMouse, uOffset;
+        attribute vec3 aTo;
+        attribute float aSeed;
+        varying float vMix;
+        varying float vFade;
+
+        mat2 rot(float a) { float s = sin(a), c = cos(a); return mat2(c, -s, s, c); }
+
+        void main() {
+          // La figura respira y gira
+          vec3 p = position;
+          vec3 n = normalize(position);
+          p += n * (sin(position.x * 2.4 + uTime * 0.9 + aSeed * 6.283) * 0.07
+                  + sin(position.y * 3.1 - uTime * 0.7) * 0.06);
+          p.xz = rot(uSpin + uTime * 0.12) * p.xz;
+          p.xy = rot(0.35 + sin(uTime * 0.1) * 0.15) * p.xy;
+          p += uOffset;
+
+          // Campo disperso, con deriva lenta
+          vec3 q = aTo;
+          q.y += sin(uTime * 0.15 + aSeed * 40.0) * 0.35;
+          q.x += cos(uTime * 0.11 + aSeed * 23.0) * 0.35;
+
+          // Cada partícula se suelta en un momento distinto
+          float m = smoothstep(aSeed * 0.55, aSeed * 0.55 + 0.45, uMorph);
+          vec3 w = mix(p, q, m);
+
+          // El cursor empuja las partículas cercanas
+          vec3 d = w - uMouse;
+          d.z *= 0.35;
+          float push = smoothstep(1.5, 0.0, length(d));
+          w += normalize(d + 0.0001) * push * 0.75;
+
+          vec4 mv = viewMatrix * vec4(w, 1.0);
+          gl_Position = projectionMatrix * mv;
+          gl_PointSize = uScale * (1.6 + aSeed * 2.6) * (7.0 / -mv.z) * mix(1.0, 0.75, m);
+          vMix = clamp(0.5 + n.y * 0.5 + push * 0.6, 0.0, 1.0);
+          vFade = mix(1.0, 0.28, m);
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        varying float vMix;
+        varying float vFade;
+        void main() {
+          float r = length(gl_PointCoord - 0.5);
+          float a = smoothstep(0.5, 0.05, r);
+          vec3 deep = vec3(0.36, 0.22, 1.0);
+          vec3 pale = vec3(0.82, 0.76, 1.0);
+          gl_FragColor = vec4(mix(deep, pale, vMix), a * 0.8 * vFade);
+        }
+      `,
+    });
+
+    const points = new THREE.Points(geo, mat);
+    points.frustumCulled = false;
+    scene.add(points);
+
+    // Cursor proyectado al plano z = 0
+    const target = new THREE.Vector3(99, 99, 0);
+    const ray = new THREE.Raycaster();
+    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const ndc = new THREE.Vector2();
+    window.addEventListener('pointermove', (e) => {
+      ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+      ray.ray.intersectPlane(plane, target);
+    }, { passive: true });
+    window.addEventListener('pointerleave', () => target.set(99, 99, 0));
+
+    function resize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      // En pantallas anchas la figura vive a la derecha; en móvil, centrada y arriba
+      const wide = w / h > 1.05;
+      camera.position.z = wide ? 6.2 : 11.5;
+      const halfW = Math.tan((camera.fov * Math.PI) / 360) * camera.position.z * camera.aspect;
+      const halfH = Math.tan((camera.fov * Math.PI) / 360) * camera.position.z;
+      uniforms.uOffset.value.set(wide ? halfW * 0.5 : 0, wide ? 0.05 : halfH * 0.5, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    let morphGoal = quiet ? 1 : 0;
+    function onScroll() {
+      if (quiet) return;
+      const p = Math.min(window.scrollY / (window.innerHeight * 0.85), 1);
+      morphGoal = p;
+    }
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    const clock = new THREE.Clock();
+    let running = true;
+    document.addEventListener('visibilitychange', () => {
+      running = !document.hidden;
+      if (running) { clock.getDelta(); tick(); }
+    });
+
+    function tick() {
+      if (!running) return;
+      const dt = Math.min(clock.getDelta(), 0.05);
+      uniforms.uTime.value += dt;
+      uniforms.uMorph.value += (morphGoal - uniforms.uMorph.value) * Math.min(dt * 4, 1);
+      uniforms.uMouse.value.lerp(target, Math.min(dt * 6, 1));
+      uniforms.uSpin.value = window.scrollY * 0.0012;
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+    tick();
+    root.classList.add('ready');
+  }
+</script>

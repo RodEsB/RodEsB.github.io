@@ -1,0 +1,45 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { content, blogHome, type Lang } from '../i18n/content';
+
+interface Props { lang: Lang; post: CollectionEntry<'blog'> }
+const { lang, post } = Astro.props;
+const t = content[lang];
+const other: Lang = lang === 'en' ? 'es' : 'en';
+const { Content } = await render(post);
+
+// Si el artículo existe en el otro idioma, el selector lleva directo a él
+const twin = post.data.translationKey
+  ? (await getCollection('blog', (p) => p.id.startsWith(`${other}/`) && p.data.translationKey === post.data.translationKey))[0]
+  : undefined;
+const altPath = twin ? `${blogHome(other)}${twin.id.split('/').pop()}/` : blogHome(other);
+const fmt = new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-MX', { dateStyle: 'long', timeZone: 'UTC' });
+---
+
+<Base lang={lang} title={post.data.title} description={post.data.description} altPath={altPath}>
+  <article class="section post">
+    <p><a class="back" href={blogHome(lang)}>{t.blog.back}</a></p>
+    <h1>{post.data.title}</h1>
+    <p class="date">{t.blog.published} <time datetime={post.data.date.toISOString()}>{fmt.format(post.data.date)}</time></p>
+    <div class="body"><Content /></div>
+  </article>
+</Base>
+
+<style>
+  .post { padding-top: clamp(8rem, 16vw, 11rem); max-width: 50rem; min-height: 80vh; }
+  .back { color: var(--muted); text-underline-offset: 4px; }
+  .back:hover { color: var(--ink); }
+  h1 { font-size: clamp(2.4rem, 7vw, 4.4rem); margin-top: 1.5rem; }
+  .date { color: var(--muted); margin: 1rem 0 2.5rem; }
+  .body { max-width: 64ch; font-size: 1.1rem; line-height: 1.7; }
+  .body :global(p) { margin: 0 0 1.2em; }
+  .body :global(h2) { font-size: 1.8rem; margin: 2.2em 0 0.6em; letter-spacing: -0.02em; }
+  .body :global(h3) { font-size: 1.35rem; margin: 1.8em 0 0.5em; }
+  .body :global(a) { color: var(--accent-soft); text-underline-offset: 4px; }
+  .body :global(code) { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.1em 0.4em; font-size: 0.9em; }
+  .body :global(pre) { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1.1rem 1.3rem; overflow-x: auto; }
+  .body :global(pre code) { background: none; border: 0; padding: 0; }
+  .body :global(blockquote) { margin: 1.5em 0; padding-left: 1.2rem; border-left: 3px solid var(--accent); color: var(--muted); }
+  .body :global(img) { border-radius: 12px; }
+</style>

@@ -1,0 +1,260 @@
+---
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource-variable/instrument-sans';
+import { content, links, home, blogHome, type Lang } from '../i18n/content';
+import Field from '../components/Field.astro';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+  /** Ruta de esta misma página en el otro idioma */
+  altPath: string;
+  /** 'hero' muestra la figura 3D completa; 'quiet' la deja dispersa al fondo */
+  field?: 'hero' | 'quiet';
+}
+
+const { lang, altPath, field = 'quiet' } = Astro.props;
+const t = content[lang];
+const title = Astro.props.title ? `${Astro.props.title} | Rodrigo Espíritu Berra` : t.meta.title;
+const description = Astro.props.description ?? t.meta.description;
+const h = home(lang);
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang={lang === 'en' ? 'es' : 'en'} href={new URL(altPath, Astro.site)} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta name="theme-color" content="#0A0714" />
+  </head>
+  <body>
+    <a class="skip" href="#main">{t.skip}</a>
+    <Field mode={field} />
+
+    <header class="top">
+      <a class="brand" href={h}>Rodrigo Espíritu Berra</a>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav">{t.nav.menu}</button>
+      <nav id="nav" aria-label="Main">
+        <a href={`${h}#about`}>{t.nav.about}</a>
+        <a href={`${h}#experience`}>{t.nav.experience}</a>
+        <a href={`${h}#projects`}>{t.nav.projects}</a>
+        <a href={blogHome(lang)}>{t.nav.blog}</a>
+        <a class="lang" href={altPath} hreflang={lang === 'en' ? 'es' : 'en'} aria-label={t.switchLabel}>{t.switchShort}</a>
+        <a class="btn small" href={links.resume} download>{t.nav.resume}</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="foot">
+      <p>© {new Date().getFullYear()} Rodrigo Espíritu Berra. {t.footer}</p>
+      <p class="foot-links">
+        <a href={links.github}>GitHub</a>
+        <a href={links.linkedin}>LinkedIn</a>
+        <a href={links.x}>X</a>
+      </p>
+    </footer>
+
+    <script>
+      const btn = document.querySelector<HTMLButtonElement>('.menu-btn');
+      const nav = document.getElementById('nav');
+      btn?.addEventListener('click', () => {
+        const open = nav?.classList.toggle('open') ?? false;
+        btn.setAttribute('aria-expanded', String(open));
+      });
+      nav?.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('a')) {
+          nav.classList.remove('open');
+          btn?.setAttribute('aria-expanded', 'false');
+        }
+      });
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --bg: #0a0714;
+    --surface: #151029;
+    --line: #2b2350;
+    --ink: #efeaff;
+    --muted: #aaa0cf;
+    --accent: #7a5cff;
+    --accent-soft: #c9bbff;
+    --display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif;
+    --body: 'Instrument Sans Variable', 'Instrument Sans', system-ui, sans-serif;
+    --gutter: clamp(1.25rem, 5vw, 4.5rem);
+    --measure: 62ch;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 106.25%;
+    line-height: 1.6;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body { margin: 0; min-height: 100vh; overflow-x: hidden; }
+
+  h1, h2, h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  p { margin: 0; }
+  a { color: inherit; }
+  img { max-width: 100%; display: block; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  .skip {
+    position: absolute;
+    left: -999px;
+    top: 0.5rem;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    z-index: 50;
+  }
+  .skip:focus { left: 0.5rem; }
+
+  /* Barra superior */
+  .top {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem var(--gutter);
+    background: rgba(10, 7, 20, 0.72);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+  .brand {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+  .top nav { display: flex; align-items: center; gap: clamp(0.9rem, 2vw, 1.8rem); }
+  .top nav a { text-decoration: none; font-size: 0.94rem; color: var(--muted); transition: color 0.15s; }
+  .top nav a:hover { color: var(--ink); }
+  .top nav .lang {
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+    font-weight: 600;
+  }
+  .top nav .lang:hover { border-color: var(--accent); }
+  .menu-btn {
+    display: none;
+    font: inherit;
+    font-size: 0.94rem;
+    color: var(--ink);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    cursor: pointer;
+  }
+
+  /* Botones */
+  .btn {
+    display: inline-block;
+    font-family: var(--body);
+    font-weight: 600;
+    text-decoration: none;
+    color: #fff;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 0.8rem 1.5rem;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .btn:hover { background: #6847f5; border-color: #6847f5; }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.ghost:hover { border-color: var(--accent-soft); background: transparent; }
+  .top nav .btn.small { padding: 0.4rem 1rem; font-size: 0.9rem; color: #fff; }
+
+  /* Secciones */
+  .section {
+    position: relative;
+    padding: clamp(4rem, 10vw, 8rem) var(--gutter);
+    max-width: 82rem;
+    margin: 0 auto;
+  }
+  .section > h2 { font-size: clamp(2.2rem, 6vw, 4.2rem); margin-bottom: clamp(1.8rem, 4vw, 3rem); }
+  .prose { max-width: var(--measure); }
+  .prose p + p { margin-top: 1.1em; }
+  .muted { color: var(--muted); }
+
+  .foot {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
+    padding: 2rem var(--gutter) 2.5rem;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.9rem;
+    background: var(--bg);
+  }
+  .foot-links { display: flex; gap: 1.4rem; }
+
+  @media (max-width: 860px) {
+    .menu-btn { display: inline-block; }
+    .top nav {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: var(--gutter);
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1.2rem 1.4rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .top nav.open { display: flex; }
+    .top nav a { font-size: 1rem; color: var(--ink); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
