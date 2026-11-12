@@ -1,0 +1,151 @@
+---
+// Ilustración animada del proyecto de detección de fatiga:
+// la app observa un rostro, los ojos se cierran y se dispara la alarma.
+interface Props {
+  label: string;
+  awake: string;
+  alert: string;
+}
+const { label, awake, alert } = Astro.props;
+
+// Puntos de la "malla" que sigue el contorno del rostro
+const mesh = Array.from({ length: 18 }, (_, i) => {
+  const a = (i / 18) * Math.PI * 2;
+  return { x: 210 + Math.cos(a) * 64, y: 176 + Math.sin(a) * 78 };
+});
+---
+
+<svg class="fatigue" viewBox="0 0 420 430" role="img" aria-label={label}>
+  <!-- Ondas de la alarma -->
+  <g class="waves">
+    <path d="M96 150 q-26 50 0 100" /><path d="M70 126 q-40 74 0 148" />
+    <path d="M324 150 q26 50 0 100" /><path d="M350 126 q40 74 0 148" />
+  </g>
+
+  <!-- Teléfono -->
+  <rect class="phone" x="118" y="14" width="184" height="402" rx="34" />
+  <rect class="notch" x="180" y="28" width="60" height="12" rx="6" />
+
+  <!-- Rostro abstracto con malla de seguimiento -->
+  <ellipse class="face" cx="210" cy="176" rx="64" ry="78" />
+  <g class="mesh">
+    {mesh.map((p) => <circle cx={p.x} cy={p.y} r="2.6" />)}
+  </g>
+  <g class="eyes">
+    <ellipse cx="184" cy="162" rx="15" ry="9" />
+    <ellipse cx="236" cy="162" rx="15" ry="9" />
+  </g>
+  <g class="brackets">
+    <path d="M163 148 v-8 h8" /><path d="M205 148 v-8 h-8" /><path d="M163 176 v8 h8" /><path d="M205 176 v8 h-8" />
+    <path d="M215 148 v-8 h8" /><path d="M257 148 v-8 h-8" /><path d="M215 176 v8 h8" /><path d="M257 176 v8 h-8" />
+  </g>
+  <path class="mouth" d="M194 214 q16 8 32 0" />
+  <line class="scan" x1="140" x2="280" y1="100" y2="100" />
+
+  <!-- Señal de apertura de los ojos -->
+  <path class="signal" pathLength="100" d="M142 300 h28 l5 14 l5 -14 h34 c14 0 14 22 28 22 h36" />
+  <line class="threshold" x1="142" x2="278" y1="314" y2="314" />
+
+  <!-- Estado -->
+  <g class="pill awake">
+    <rect x="140" y="344" width="140" height="40" rx="20" />
+    <text x="210" y="369">{awake}</text>
+  </g>
+  <g class="pill alert">
+    <rect x="140" y="344" width="140" height="40" rx="20" />
+    <text x="210" y="369">{alert}</text>
+  </g>
+</svg>
+
+<style>
+  .fatigue {
+    --warn: #ffb86b;
+    width: min(100%, 24rem);
+    height: auto;
+    overflow: visible;
+  }
+  .phone { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+  .notch { fill: var(--line); }
+  .face { fill: none; stroke: var(--line); stroke-width: 1.5; }
+  .mesh circle { fill: var(--accent-soft); opacity: 0.7; }
+  .eyes ellipse { fill: var(--ink); transform-box: fill-box; transform-origin: center; }
+  .brackets path { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+  .mouth { fill: none; stroke: var(--muted); stroke-width: 2.5; stroke-linecap: round; }
+  .scan { stroke: var(--accent); stroke-width: 2; opacity: 0; }
+  .signal { fill: none; stroke: var(--accent-soft); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .threshold { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 5; opacity: 0.6; }
+  .waves path { fill: none; stroke: var(--warn); stroke-width: 3; stroke-linecap: round; opacity: 0; }
+  .pill rect { fill: none; stroke: var(--accent-soft); stroke-width: 1.5; }
+  .pill text { fill: var(--accent-soft); font-family: var(--body); font-size: 15px; font-weight: 600; text-anchor: middle; }
+  .pill.alert rect { fill: var(--warn); stroke: var(--warn); }
+  .pill.alert text { fill: #1c1206; }
+  .pill.alert { opacity: 0; }
+
+  /* Ciclo de 9 s: despierto, parpadeo, los ojos se cierran, alarma, reinicio */
+  @media (prefers-reduced-motion: no-preference) {
+    .eyes ellipse { animation: eyes 9s ease-in-out infinite; }
+    .scan { animation: scan 9s linear infinite; }
+    .signal { stroke-dasharray: 100; animation: signal 9s linear infinite; }
+    .phone { animation: phone 9s ease-in-out infinite; }
+    .brackets path { animation: brackets 9s ease-in-out infinite; }
+    .pill.awake { animation: awake 9s ease-in-out infinite; }
+    .pill.alert { animation: alert 9s ease-in-out infinite; }
+    .waves path { animation: waves 9s ease-out infinite; }
+    .waves path:nth-child(even) { animation-delay: 0.18s; }
+    .mesh circle { animation: mesh 2.4s ease-in-out infinite; }
+    .mesh circle:nth-child(3n) { animation-delay: 0.8s; }
+    .mesh circle:nth-child(3n + 1) { animation-delay: 1.6s; }
+  }
+
+  @keyframes eyes {
+    0%, 16% { transform: scaleY(1); }
+    18% { transform: scaleY(0.1); }
+    20%, 40% { transform: scaleY(1); }
+    58%, 88% { transform: scaleY(0.1); }
+    94%, 100% { transform: scaleY(1); }
+  }
+  @keyframes scan {
+    0% { transform: translateY(0); opacity: 0; }
+    4% { opacity: 0.8; }
+    40% { transform: translateY(150px); opacity: 0.8; }
+    44%, 100% { transform: translateY(150px); opacity: 0; }
+  }
+  @keyframes signal {
+    0% { stroke-dashoffset: 100; }
+    62%, 92% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
+  }
+  @keyframes phone {
+    0%, 60% { stroke: var(--line); }
+    66%, 88% { stroke: var(--warn); }
+    94%, 100% { stroke: var(--line); }
+  }
+  @keyframes brackets {
+    0%, 60% { stroke: var(--accent); }
+    66%, 88% { stroke: var(--warn); }
+    94%, 100% { stroke: var(--accent); }
+  }
+  @keyframes awake {
+    0%, 60% { opacity: 1; }
+    64%, 90% { opacity: 0; }
+    95%, 100% { opacity: 1; }
+  }
+  @keyframes alert {
+    0%, 60% { opacity: 0; }
+    64%, 90% { opacity: 1; }
+    95%, 100% { opacity: 0; }
+  }
+  @keyframes waves {
+    0%, 62% { opacity: 0; }
+    66% { opacity: 1; }
+    72% { opacity: 0.25; }
+    78% { opacity: 1; }
+    84% { opacity: 0.25; }
+    88% { opacity: 1; }
+    93%, 100% { opacity: 0; }
+  }
+  @keyframes mesh {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+  }
+</style>

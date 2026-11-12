@@ -1,0 +1,285 @@
+---
+// Escena 3D del proyecto "Agente de IA empresarial": un núcleo (el agente)
+// conectado a nodos (los servicios), con pulsos que viajan entre ellos.
+// Se puede girar arrastrando con el mouse o el dedo.
+interface Props {
+  label: string;
+  hint: string;
+}
+const { label, hint } = Astro.props;
+---
+
+<div class="agent3d" role="img" aria-label={label}>
+  <!-- Respaldo estático si el navegador no tiene WebGL -->
+  <svg class="fallback" viewBox="0 0 420 300" aria-hidden="true">
+    <g class="wires">
+      <path d="M210 150 L70 60" /><path d="M210 150 L350 60" />
+      <path d="M210 150 L50 180" /><path d="M210 150 L370 180" />
+      <path d="M210 150 L130 262" /><path d="M210 150 L290 262" />
+    </g>
+    <g class="nodes">
+      <circle cx="70" cy="60" r="9" /><circle cx="350" cy="60" r="9" />
+      <circle cx="50" cy="180" r="9" /><circle cx="370" cy="180" r="9" />
+      <circle cx="130" cy="262" r="9" /><circle cx="290" cy="262" r="9" />
+    </g>
+    <circle class="core-halo" cx="210" cy="150" r="54" />
+    <circle class="core" cx="210" cy="150" r="30" />
+  </svg>
+  <canvas></canvas>
+  <p class="hint" aria-hidden="true">{hint}</p>
+</div>
+
+<style>
+  .agent3d {
+    position: relative;
+    width: min(100%, 31rem);
+    aspect-ratio: 1 / 1;
+    cursor: grab;
+    touch-action: pan-y; /* el scroll vertical sigue funcionando en móvil */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .agent3d.dragging { cursor: grabbing; }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .agent3d.ready canvas { opacity: 1; }
+  .agent3d.ready .fallback { opacity: 0; }
+  .fallback { position: absolute; inset: 12% 4%; width: 92%; height: 76%; transition: opacity 0.4s ease; }
+  .fallback .wires path { stroke: var(--line); stroke-width: 1.5; fill: none; stroke-dasharray: 5 7; }
+  .fallback .nodes circle { fill: var(--bg); stroke: var(--accent-soft); stroke-width: 2; }
+  .fallback .core { fill: var(--accent); }
+  .fallback .core-halo { fill: rgba(122, 92, 255, 0.14); stroke: rgba(122, 92, 255, 0.45); }
+  .hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0.2rem;
+    text-align: center;
+    font-size: 0.84rem;
+    color: var(--muted);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+  }
+  .agent3d.ready .hint { opacity: 1; }
+  .agent3d.touched .hint { opacity: 0; }
+</style>
+
+<script>
+  const roots = document.querySelectorAll<HTMLElement>('.agent3d');
+  if (roots.length) {
+    // Carga Three.js solo cuando la escena está por entrar en pantalla
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        import('three').then((THREE) => build(THREE, e.target as HTMLElement)).catch(() => {});
+      }
+    }, { rootMargin: '300px' });
+    roots.forEach((r) => io.observe(r));
+  }
+
+  function build(THREE: typeof import('three'), root: HTMLElement) {
+    const canvas = root.querySelector('canvas')!;
+    let renderer: import('three').WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    } catch {
+      return; // sin WebGL se queda el respaldo estático
+    }
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 50);
+    camera.position.set(0, 0, 11.4);
+    const world = new THREE.Group();
+    world.rotation.set(0.35, 0.4, 0);
+    scene.add(world);
+
+    const C = {
+      accent: new THREE.Color('#7a5cff'),
+      soft: new THREE.Color('#c9bbff'),
+      white: new THREE.Color('#ffffff'),
+      line: new THREE.Color('#4b3d8f'),
+    };
+
+    // Textura de resplandor para los brillos
+    const glowTex = (() => {
+      const c = document.createElement('canvas');
+      c.width = c.height = 128;
+      const g = c.getContext('2d')!;
+      const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      grad.addColorStop(0, 'rgba(255,255,255,1)');
+      grad.addColorStop(0.25, 'rgba(255,255,255,0.55)');
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 128, 128);
+      return new THREE.CanvasTexture(c);
+    })();
+    const glow = (color: import('three').Color, size: number, opacity = 1) => {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: glowTex, color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending,
+      }));
+      s.scale.setScalar(size);
+      return s;
+    };
+
+    // Núcleo: el agente
+    const core = new THREE.Group();
+    core.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.62, 1), new THREE.MeshBasicMaterial({ color: C.accent })));
+    const cage = new THREE.LineSegments(
+      new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(0.98, 1)),
+      new THREE.LineBasicMaterial({ color: C.soft, transparent: true, opacity: 0.55 }),
+    );
+    core.add(cage);
+    const coreGlow = glow(C.accent, 4.6, 0.75);
+    core.add(coreGlow);
+    world.add(core);
+
+    // Nodos: los servicios, repartidos en una esfera
+    const N = 9;
+    const R = 2.6;
+    const nodes: { pos: import('three').Vector3; mesh: import('three').Mesh; halo: import('three').Sprite; hit: number }[] = [];
+    const linePos: number[] = [];
+    for (let i = 0; i < N; i++) {
+      const y = 1 - (i / (N - 1)) * 2;
+      const r = Math.sqrt(1 - y * y);
+      const th = i * Math.PI * (3 - Math.sqrt(5));
+      const pos = new THREE.Vector3(Math.cos(th) * r, y * 0.85, Math.sin(th) * r).multiplyScalar(R * (0.82 + (i % 3) * 0.09));
+      const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.17, 0), new THREE.MeshBasicMaterial({ color: C.soft }));
+      mesh.position.copy(pos);
+      const halo = glow(C.soft, 0.9, 0.35);
+      halo.position.copy(pos);
+      world.add(mesh, halo);
+      nodes.push({ pos, mesh, halo, hit: 0 });
+      linePos.push(0, 0, 0, pos.x, pos.y, pos.z);
+    }
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePos, 3));
+    world.add(new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: C.line, transparent: true, opacity: 0.9 })));
+
+    // Pulsos: peticiones que salen del agente y respuestas que regresan
+    const pulses = nodes.map((n, i) => {
+      const s = glow(C.white, 0.42, 1);
+      world.add(s);
+      return { s, node: n, t: (i * 0.37) % 1, speed: 0.28 + (i % 4) * 0.05, out: i % 2 === 0 };
+    });
+
+    // Órbitas y polvo alrededor
+    const ringMat = new THREE.LineBasicMaterial({ color: C.accent, transparent: true, opacity: 0.38 });
+    const rings: import('three').LineLoop[] = [];
+    [[3.05, 1.15, 0.2], [3.3, -0.6, 1.0]].forEach(([rad, rx, rz]) => {
+      const pts = [];
+      for (let a = 0; a < 128; a++) pts.push(new THREE.Vector3(Math.cos((a / 128) * Math.PI * 2) * rad, 0, Math.sin((a / 128) * Math.PI * 2) * rad));
+      const ring = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), ringMat);
+      ring.rotation.set(rx, 0, rz);
+      world.add(ring);
+      rings.push(ring);
+    });
+    const dust = new Float32Array(260 * 3);
+    for (let i = 0; i < 260; i++) {
+      const v = new THREE.Vector3().randomDirection().multiplyScalar(2.6 + Math.random() * 0.8);
+      dust.set([v.x, v.y, v.z], i * 3);
+    }
+    const dustGeo = new THREE.BufferGeometry();
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dust, 3));
+    world.add(new THREE.Points(dustGeo, new THREE.PointsMaterial({
+      color: C.soft, size: 0.045, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending,
+    })));
+
+    // Girar arrastrando, con inercia
+    let dragging = false;
+    let lastX = 0, lastY = 0, velX = 0, velY = 0;
+    canvas.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      lastX = e.clientX; lastY = e.clientY; velX = velY = 0;
+      canvas.setPointerCapture(e.pointerId);
+      root.classList.add('dragging', 'touched');
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      velX = (e.clientX - lastX) * 0.008;
+      velY = (e.clientY - lastY) * 0.008;
+      lastX = e.clientX; lastY = e.clientY;
+      world.rotation.y += velX;
+      world.rotation.x = Math.max(-1.2, Math.min(1.2, world.rotation.x + velY));
+      if (!visible || reduce) renderer.render(scene, camera);
+    });
+    const release = () => { dragging = false; root.classList.remove('dragging'); };
+    canvas.addEventListener('pointerup', release);
+    canvas.addEventListener('pointercancel', release);
+
+    function resize() {
+      const s = root.clientWidth;
+      renderer.setSize(s, s, false);
+    }
+    resize();
+    new ResizeObserver(resize).observe(root);
+
+    const clock = new THREE.Clock();
+    let visible = false;
+    let raf = 0;
+    const tmp = new THREE.Vector3();
+
+    function frame() {
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const t = clock.elapsedTime;
+
+      if (!dragging) {
+        world.rotation.y += velX + (reduce ? 0 : dt * 0.22);
+        world.rotation.x = Math.max(-1.2, Math.min(1.2, world.rotation.x + velY));
+        velX *= 0.94; velY *= 0.94;
+      }
+
+      if (!reduce) {
+        cage.rotation.x = t * 0.35; cage.rotation.y = -t * 0.25;
+        const beat = 1 + Math.sin(t * 2.2) * 0.06;
+        core.children[0].scale.setScalar(beat);
+        coreGlow.material.opacity = 0.6 + Math.sin(t * 2.2) * 0.18;
+        rings[0].rotation.y = t * 0.15; rings[1].rotation.y = -t * 0.11;
+
+        for (const p of pulses) {
+          p.t += dt * p.speed;
+          if (p.t >= 1) {
+            p.t = 0;
+            if (p.out) p.node.hit = 1; // la petición llegó al servicio
+            p.out = !p.out;
+          }
+          const k = p.out ? p.t : 1 - p.t;
+          p.s.position.copy(tmp.copy(p.node.pos).multiplyScalar(k));
+          p.s.material.opacity = Math.sin(p.t * Math.PI);
+        }
+        for (const n of nodes) {
+          n.hit = Math.max(0, n.hit - dt * 1.6);
+          n.mesh.scale.setScalar(1 + n.hit * 0.9);
+          n.mesh.rotation.y = t * 0.8;
+          n.halo.scale.setScalar(0.9 + n.hit * 1.6);
+          n.halo.material.opacity = 0.35 + n.hit * 0.55;
+        }
+      } else {
+        for (const p of pulses) p.s.position.copy(tmp.copy(p.node.pos).multiplyScalar(0.5));
+      }
+
+      renderer.render(scene, camera);
+      if (visible) raf = requestAnimationFrame(frame);
+    }
+
+    // Solo se anima mientras está en pantalla
+    new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting && !document.hidden;
+      cancelAnimationFrame(raf);
+      if (visible) { clock.getDelta(); raf = requestAnimationFrame(frame); }
+    }, { threshold: 0.05 }).observe(root);
+
+    frame();
+    root.classList.add('ready');
+  }
+</script>
