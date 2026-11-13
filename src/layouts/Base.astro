@@ -71,15 +71,39 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <script>
       const btn = document.querySelector<HTMLButtonElement>('.menu-btn');
       const nav = document.getElementById('nav');
-      btn?.addEventListener('click', () => {
-        const open = nav?.classList.toggle('open') ?? false;
-        btn.setAttribute('aria-expanded', String(open));
-      });
+
+      function setOpen(open: boolean) {
+        nav?.classList.toggle('open', open);
+        btn?.setAttribute('aria-expanded', String(open));
+      }
+      const isOpen = () => nav?.classList.contains('open') ?? false;
+
+      btn?.addEventListener('click', () => setOpen(!isOpen()));
+
+      // Cerrar al elegir una opción del menú
       nav?.addEventListener('click', (e) => {
-        if ((e.target as HTMLElement).closest('a')) {
-          nav.classList.remove('open');
-          btn?.setAttribute('aria-expanded', 'false');
+        if ((e.target as HTMLElement).closest('a')) setOpen(false);
+      });
+
+      // Cerrar al tocar o hacer clic en cualquier otra parte de la pantalla
+      document.addEventListener('pointerdown', (e) => {
+        if (!isOpen()) return;
+        const target = e.target as Node;
+        if (nav?.contains(target) || btn?.contains(target)) return;
+        setOpen(false);
+      });
+
+      // Cerrar con la tecla Escape y devolver el foco al botón
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isOpen()) {
+          setOpen(false);
+          btn?.focus();
         }
+      });
+
+      // Cerrar si la pantalla se agranda y el menú vuelve a mostrarse en línea
+      window.matchMedia('(min-width: 861px)').addEventListener('change', (e) => {
+        if (e.matches) setOpen(false);
       });
     </script>
   </body>
@@ -251,7 +275,23 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     }
     .top nav.open { display: flex; }
     .top nav a { font-size: 1rem; color: var(--ink); }
+
+    /* Menú desplegable: opciones centradas y botones del mismo ancho */
+    .top nav { align-items: stretch; text-align: center; }
+    .top nav a:not(.lang):not(.btn) { padding: 0.3rem 0; border-radius: 8px; }
+    .top nav .lang,
+    .top nav .btn.small { display: block; text-align: center; padding: 0.55rem 1.2rem; }
+    .top nav .lang { margin-top: 0.4rem; }
+    .top nav a:not(.lang):not(.btn) { transition: color 0.15s, background-color 0.15s; }
+    .top nav a:not(.lang):not(.btn):hover,
+    .top nav a:not(.lang):not(.btn):focus-visible { background: rgba(122, 92, 255, 0.16); }
   }
+
+  /* Resaltar la opción de texto que está bajo el cursor o el foco */
+  .top nav a:not(.lang):not(.btn):hover,
+  .top nav a:not(.lang):not(.btn):focus-visible { color: var(--accent-soft); }
+  .top nav .lang:hover,
+  .top nav .lang:focus-visible { color: var(--accent-soft); border-color: var(--accent); }
 
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
