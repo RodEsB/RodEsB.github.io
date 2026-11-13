@@ -17,7 +17,7 @@ Igual que en Mario, el usuario debe descubrir las reglas actuando. Cada interacc
 
 **Acción → Respuesta → Beneficio**
 
-![Diagrama del ciclo: una acción (registro un gasto) produce una respuesta (aparece guardado) y un beneficio (veo cuánto llevo gastado), y el ciclo se repite](/diagrams/loop-es.svg)
+<img src="/diagrams/loop-es.svg" alt="Diagrama del ciclo: una acción (registro un gasto) produce una respuesta (aparece guardado) y un beneficio (veo cuánto llevo gastado), y el ciclo se repite" width="800" height="250" loading="lazy" decoding="async" />
 
 Hago algo, la app me responde de forma clara y obtengo algo que me sirve. Si ese ciclo funciona, no hace falta explicar mucho más.
 
@@ -36,7 +36,7 @@ Casi todo el esfuerzo de diseño suele irse al primer uso, pero hay tres momento
 2. **Registrar de forma recurrente.** El uso de todos los días, cuando la novedad ya pasó.
 3. **Regresar después de una pausa.** Cuando alguien vuelve tras varios días sin usarla.
 
-![Línea de tiempo con los tres momentos: empezar, registrar seguido y regresar después de varios días sin usar la app](/diagrams/moments-es.svg)
+<img src="/diagrams/moments-es.svg" alt="Línea de tiempo con los tres momentos: empezar, registrar seguido y regresar después de varios días sin usar la app" width="800" height="215" loading="lazy" decoding="async" />
 
 Los siete principios que siguen cubren esos tres momentos.
 
@@ -50,7 +50,7 @@ Para que funcione hay que pedir solamente lo necesario. Un monto basta para empe
 
 El registro inicial captura el dato principal. Los detalles vienen después: una vez guardado el gasto, la app puede ofrecer añadir una nota, una categoría o una foto del recibo.
 
-![Dos pantallas: el primer registro solo pide el monto; después de guardar, la app ofrece añadir nota, categoría o foto del recibo](/diagrams/disclosure-es.svg)
+<img src="/diagrams/disclosure-es.svg" alt="Dos pantallas: el primer registro solo pide el monto; después de guardar, la app ofrece añadir nota, categoría o foto del recibo" width="800" height="305" loading="lazy" decoding="async" />
 
 A esto se le llama divulgación progresiva: mostrar cada opción en el momento en que tiene sentido y no todas desde el inicio. La regla práctica es evitar demasiadas preguntas en muy poco tiempo. Cada pregunta extra antes del primer resultado es una oportunidad para que la persona cierre la app.
 
@@ -78,7 +78,7 @@ También conviene decidir qué se captura a mano y qué de forma automática seg
 
 Pedir que alguien cree una cuenta antes de ver para qué sirve la app es cobrar la entrada antes de mostrar el juego. Es mejor dejar que la persona empiece y ofrecerle la cuenta cuando la necesite: al querer un respaldo o sincronizar con otro dispositivo.
 
-![Tres casos: al abrir la app no se pide nada; al querer un respaldo se ofrece crear una cuenta; al escanear un recibo se pide el permiso de cámara](/diagrams/asking-es.svg)
+<img src="/diagrams/asking-es.svg" alt="Tres casos: al abrir la app no se pide nada; al querer un respaldo se ofrece crear una cuenta; al escanear un recibo se pide el permiso de cámara" width="800" height="285" loading="lazy" decoding="async" />
 
 Lo mismo aplica a los permisos. Si uno es indispensable, hay que explicar su propósito en el momento de pedirlo. "Necesitamos tu cámara para escanear el recibo" se acepta mucho más fácil que una ventana de permiso que aparece sin contexto al abrir la app.
 

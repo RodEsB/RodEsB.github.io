@@ -80,13 +80,13 @@ const { label, hint } = Astro.props;
       for (const e of entries) {
         if (!e.isIntersecting) continue;
         io.unobserve(e.target);
-        import('three').then((THREE) => build(THREE, e.target as HTMLElement)).catch(() => {});
+        import('../lib/three').then((THREE) => build(THREE, e.target as HTMLElement)).catch(() => {});
       }
     }, { rootMargin: '300px' });
     roots.forEach((r) => io.observe(r));
   }
 
-  function build(THREE: typeof import('three'), root: HTMLElement) {
+  function build(THREE: typeof import('../lib/three'), root: HTMLElement) {
     const canvas = root.querySelector('canvas')!;
     let renderer: import('three').WebGLRenderer;
     try {

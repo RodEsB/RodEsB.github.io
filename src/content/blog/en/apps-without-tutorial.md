@@ -17,7 +17,7 @@ Just like in Mario, the user should discover the rules by acting. Every interact
 
 **Action → Response → Benefit**
 
-![Diagram of the loop: an action (I record an expense) produces a response (it shows up saved) and a benefit (I see how much I have spent), and the loop repeats](/diagrams/loop-en.svg)
+<img src="/diagrams/loop-en.svg" alt="Diagram of the loop: an action (I record an expense) produces a response (it shows up saved) and a benefit (I see how much I have spent), and the loop repeats" width="800" height="250" loading="lazy" decoding="async" />
 
 I do something, the app answers clearly, and I get something useful out of it. If that loop works, there is not much left to explain.
 
@@ -36,7 +36,7 @@ Most design effort goes into the first use, but there are three different moment
 2. **Recording regularly.** Everyday use, once the novelty is gone.
 3. **Coming back after a break.** When someone returns after several days away.
 
-![Timeline with the three moments: starting, recording regularly, and coming back after several days without using the app](/diagrams/moments-en.svg)
+<img src="/diagrams/moments-en.svg" alt="Timeline with the three moments: starting, recording regularly, and coming back after several days without using the app" width="800" height="215" loading="lazy" decoding="async" />
 
 The seven principles below cover those three moments.
 
@@ -50,7 +50,7 @@ For this to work, ask only for what is necessary. An amount is enough to start. 
 
 The first record captures the main piece of data. Details come afterwards: once the expense is saved, the app can offer to add a note, a category or a photo of the receipt.
 
-![Two screens: the first record only asks for the amount; after saving, the app offers to add a note, a category or a receipt photo](/diagrams/disclosure-en.svg)
+<img src="/diagrams/disclosure-en.svg" alt="Two screens: the first record only asks for the amount; after saving, the app offers to add a note, a category or a receipt photo" width="800" height="305" loading="lazy" decoding="async" />
 
 This is called progressive disclosure: showing each option at the moment it makes sense, not all of them up front. The practical rule is to avoid too many questions in too little time. Every extra question before the first result is a chance for the person to close the app.
 
@@ -78,7 +78,7 @@ It is also worth deciding what gets captured by hand and what gets captured auto
 
 Asking someone to create an account before they see what the app does is charging admission before showing the game. It is better to let people start and offer the account when they need it: when they want a backup or want to sync with another device.
 
-![Three cases: opening the app asks for nothing; wanting a backup offers an account; scanning a receipt asks for camera permission](/diagrams/asking-en.svg)
+<img src="/diagrams/asking-en.svg" alt="Three cases: opening the app asks for nothing; wanting a backup offers an account; scanning a receipt asks for camera permission" width="800" height="285" loading="lazy" decoding="async" />
 
 The same goes for permissions. If one is essential, explain its purpose at the moment you ask. "We need your camera to scan the receipt" is far easier to accept than a permission prompt that shows up with no context when the app opens.
 

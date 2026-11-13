@@ -4,6 +4,7 @@ import AgentScene from './AgentScene.astro';
 import FatigueArt from './FatigueArt.astro';
 import TrustyArt from './TrustyArt.astro';
 import OnboardingArt from './OnboardingArt.astro';
+import ContactForm from './ContactForm.astro';
 import { content, links, skills, home, blogHome, type Lang } from '../i18n/content';
 
 interface Props {
@@ -15,6 +16,18 @@ const other: Lang = lang === 'en' ? 'es' : 'en';
 ---
 
 <Base lang={lang} altPath={home(other)} field="hero">
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Rodrigo Espíritu Berra',
+    url: 'https://rodesb.github.io/',
+    jobTitle: 'AI and Automation Consultant',
+    worksFor: { '@type': 'Organization', name: 'Ellucian' },
+    alumniOf: { '@type': 'CollegeOrUniversity', name: 'Universidad de las Américas Puebla' },
+    address: { '@type': 'PostalAddress', addressLocality: 'Puebla', addressCountry: 'MX' },
+    knowsLanguage: ['es', 'en'],
+    sameAs: [links.github, links.linkedin, links.x],
+  })} />
   <section class="hero">
     <h1>
       {t.hero.lines.map((line, i) => (
@@ -139,8 +152,9 @@ const other: Lang = lang === 'en' ? 'es' : 'en';
   <section class="section contact" id="contact">
     <h2>{t.contact.title}</h2>
     <p class="lead prose">{t.contact.text}</p>
+    {links.formspree && <ContactForm lang={lang} />}
     <p class="contact-actions">
-      <a class="btn" href={links.email}>{t.contact.email}</a>
+      <a class={links.formspree ? 'btn ghost' : 'btn'} href={links.email}>{t.contact.email}</a>
       <a class="btn ghost" href={links.linkedin}>LinkedIn</a>
       <a class="btn ghost" href={links.github}>GitHub</a>
       <a class="btn ghost" href={links.x}>X</a>
@@ -252,7 +266,7 @@ const other: Lang = lang === 'en' ? 'es' : 'en';
     font-size: 0.86rem;
     font-weight: 600;
     color: #fff;
-    background: var(--accent);
+    background: var(--accent-strong);
     border-radius: 999px;
     padding: 0.15rem 0.75rem;
   }
@@ -289,6 +303,10 @@ const other: Lang = lang === 'en' ? 'es' : 'en';
   .contact h2 { font-size: clamp(3rem, 10vw, 7.5rem); letter-spacing: -0.04em; }
   .contact .lead { color: var(--muted); }
   .contact-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 2rem; }
+
+  @media (max-width: 520px) {
+    .hero h1 { font-size: 9.4vw; }
+  }
 
   @media (max-width: 860px) {
     .about-grid, .project, .more { grid-template-columns: minmax(0, 1fr); }

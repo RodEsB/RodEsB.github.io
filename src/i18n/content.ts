@@ -9,6 +9,8 @@ export const links = {
   x: 'https://twitter.com/Rod_Es_B',
   email: 'mailto:rodrigo.espirituberra@gmail.com',
   resume: '/Rodrigo-Espiritu-Berra-Resume.pdf',
+  // ID del formulario de Formspree (el código después de /f/). Mientras esté vacío, el formulario no se muestra.
+  formspree: 'mqpqebwz',
 };
 
 export const skills = [
@@ -47,16 +49,16 @@ export const content = {
     skip: 'Skip to content',
     hero: {
       name: 'Rodrigo Espíritu Berra',
-      lines: ['I build AI agents', 'companies can', 'put to work.'],
+      lines: ['I like the part', 'of AI that comes', 'after the demo.'],
       lede: 'Software engineer in Puebla, Mexico. I work as an AI and Automation Consultant at Ellucian, taking agents from architecture to production on AWS.',
       primary: 'See my projects',
       secondary: 'Get in touch',
-      hint: 'Move your cursor through the particles',
+      hint: 'Move your cursor across the galaxy',
     },
     about: {
       title: 'About me',
       body: [
-        'I like the part of AI that comes after the demo: making an agent reliable enough that a company can depend on it. That means clear architecture, tools the agent can use safely, and tests that show how it behaves before anyone else finds out.',
+        'A demo proves an idea works once. What I enjoy is making an agent reliable enough that a company can depend on it every day: clear architecture, tools the agent can use safely, and tests that show how it behaves before anyone else finds out.',
         'I am self-taught at heart. If something looks interesting I usually end up building a side project with it, which is how I got from C++ and Swift to cloud infrastructure, frontends in React and agent runtimes.',
         'I graduated in Software Engineering from UDLAP in 2026. I hold the Google Cloud Computing Foundations certification and I am studying for the AWS Solutions Architect one. I speak Spanish and English.',
       ],
@@ -66,7 +68,7 @@ export const content = {
       title: 'Experience',
       items: [
         {
-          period: 'Jun 2026 to today',
+          period: 'Jun 2026 to present',
           role: 'AI and Automation Consultant',
           company: 'Ellucian',
           text: 'I design and build the architecture for enterprise AI agents connected to internal company services, along with the evaluation that checks how they behave.',
@@ -150,7 +152,7 @@ export const content = {
             'A retrieval strategy tuned for the content, with guardrails, a designed conversation flow and system prompts that give the assistant its voice.',
             'A Slack integration built on API Gateway and Lambda, with conversations stored in DynamoDB and a handoff to a person when the assistant cannot solve a request.',
             'A test dataset and automated evaluations to measure answer quality before each change.',
-            'Researched alternatives and redesigned part of the architecture with other technologies to make it cheaper to run, plus a Jenkins CI/CD pipeline to ship updates continuously.',
+            'A cheaper architecture to run, after researching alternatives and redesigning part of it with other technologies, plus a Jenkins CI/CD pipeline to ship updates continuously.',
           ],
           stack: ['Amazon Bedrock', 'Knowledge Bases', 'S3 Vectors', 'Lambda', 'API Gateway', 'DynamoDB', 'Python', 'Jenkins'],
         },
@@ -207,7 +209,7 @@ export const content = {
     competitions: {
       title: 'Hackathons and competitions',
       items: [
-        { period: 'Summer 2024', name: 'HackPuebla', result: 'State winner', text: 'A hackathon organized by Ellucian and Forvia on information discernment. I developed TrustyWeb, a full-stack Chrome extension built on the ChatGPT API.' },
+        { period: 'Summer 2024', name: 'HackPuebla', result: 'State winner', text: 'A hackathon organized by Ellucian and Forvia on information discernment. I developed TrustyWeb, a full-stack Chromium extension built on the OpenAI API.' },
         { period: 'Spring 2024', name: 'ETH Cinco de Mayo Hackathon', text: 'Built a web app on blockchain for competitive gaming transactions, using MetaMask, Astar and Remix Ethereum IDE.' },
         { period: 'Fall 2023', name: 'MAAC, Mission Alignment Community Challenge', result: 'National winner', text: 'Developed an educational app aligned with the UN 2030 Agenda that uses augmented reality to engage students. Designed in Figma and built with Swift, SwiftUI and Reality Composer.' },
         { period: 'Summer 2023', name: 'iOS Community Changers', text: 'Developed a mental health app for a national competition, focused on managing anxiety through an immersive experience: a calm virtual garden made with Reality Composer and an interface in SwiftUI.' },
@@ -227,8 +229,17 @@ export const content = {
     },
     contact: {
       title: 'Let\'s talk',
-      text: 'Open to interesting projects, roles and conversations about AI agents. The fastest way to reach me is email or LinkedIn.',
+      text: 'Open to interesting projects, roles and conversations about AI agents. Leave me a message here, or reach me by email or LinkedIn.',
       email: 'Send me an email',
+    },
+    form: {
+      name: 'Name',
+      email: 'Email',
+      message: 'Message',
+      send: 'Send message',
+      sending: 'Sending…',
+      sent: 'Message sent. I will get back to you soon.',
+      error: 'The message could not be sent. Try again or write to me by email.',
     },
     footer: 'Built with Astro and Three.js.',
   },
@@ -245,16 +256,16 @@ export const content = {
     skip: 'Saltar al contenido',
     hero: {
       name: 'Rodrigo Espíritu Berra',
-      lines: ['Construyo agentes de IA', 'que las empresas sí', 'ponen a trabajar.'],
+      lines: ['Me gusta la parte', 'de la IA que viene', 'después del demo.'],
       lede: 'Ingeniero de software en Puebla, México. Trabajo como AI and Automation Consultant en Ellucian, llevando agentes desde la arquitectura hasta producción en AWS.',
       primary: 'Ver mis proyectos',
       secondary: 'Contáctame',
-      hint: 'Mueve el cursor entre las partículas',
+      hint: 'Mueve el cursor sobre la galaxia',
     },
     about: {
       title: 'Sobre mí',
       body: [
-        'Me gusta la parte de la IA que viene después del demo: lograr que un agente sea tan confiable que una empresa pueda depender de él. Eso implica una arquitectura clara, herramientas que el agente pueda usar de forma segura y pruebas que muestren cómo se comporta antes de que alguien más lo descubra.',
+        'Un demo prueba que una idea funciona una vez. Lo que disfruto es lograr que un agente sea tan confiable que una empresa pueda depender de él todos los días: una arquitectura clara, herramientas que el agente pueda usar de forma segura y pruebas que muestren cómo se comporta antes de que alguien más lo descubra.',
         'Soy autodidacta de corazón. Si algo me parece interesante, casi siempre termino armando un proyecto con eso; así pasé de C++ y Swift a infraestructura en la nube, frontends en React y runtimes de agentes.',
         'Me gradué de Ingeniería de Software en la UDLAP en 2026. Tengo la certificación Google Cloud Computing Foundations y estoy estudiando para la de AWS Solutions Architect. Hablo español e inglés.',
       ],
@@ -264,7 +275,7 @@ export const content = {
       title: 'Experiencia',
       items: [
         {
-          period: 'Jun 2026 a hoy',
+          period: 'Jun 2026 a la fecha',
           role: 'AI and Automation Consultant',
           company: 'Ellucian',
           text: 'Diseño y construyo la arquitectura de agentes de IA empresariales conectados a los servicios internos de la compañía, junto con la evaluación que verifica cómo se comportan.',
@@ -348,7 +359,7 @@ export const content = {
             'Una estrategia de recuperación ajustada al contenido, con guardrails, un flujo de conversación diseñado y system prompts que le dan su voz al asistente.',
             'Integración con Slack sobre API Gateway y Lambda, con las conversaciones guardadas en DynamoDB y canalización a una persona cuando el asistente no puede resolver una petición.',
             'Un dataset de prueba y evaluaciones automatizadas para medir la calidad de las respuestas antes de cada cambio.',
-            'Investigué alternativas y rediseñé parte de la arquitectura con otras tecnologías para que fuera más barata de operar, además de un pipeline de CI/CD en Jenkins para publicar mejoras de forma continua.',
+            'Una arquitectura más barata de operar, tras investigar alternativas y rediseñar parte de ella con otras tecnologías, además de un pipeline de CI/CD en Jenkins para publicar mejoras de forma continua.',
           ],
           stack: ['Amazon Bedrock', 'Knowledge Bases', 'S3 Vectors', 'Lambda', 'API Gateway', 'DynamoDB', 'Python', 'Jenkins'],
         },
@@ -369,7 +380,7 @@ export const content = {
           id: 'trusty',
           name: 'TrustyWeb',
           context: 'HackPuebla 2024, ganador estatal',
-          text: 'Una extensión para Chromium que te ayuda a evaluar lo que lees en internet. La construí en HackPuebla, un hackathon organizado por Ellucian y Forvia sobre cómo distinguir información confiable, donde ganó el concurso estatal.',
+          text: 'Una extensión para Chromium que te ayuda a evaluar lo que lees en internet. La construí en HackPuebla, un hackatón organizado por Ellucian y Forvia sobre cómo distinguir información confiable, donde ganó el concurso estatal.',
           points: [
             'Revisa una URL o un texto seleccionado en tiempo real con la API de OpenAI.',
             'Sugiere fuentes alternativas para que compares y formes tu propio criterio.',
@@ -403,9 +414,9 @@ export const content = {
       ],
     },
     competitions: {
-      title: 'Hackathones y competencias',
+      title: 'Hackatones y competencias',
       items: [
-        { period: 'Verano 2024', name: 'HackPuebla', result: 'Ganador estatal', text: 'Un hackathon organizado por Ellucian y Forvia sobre discernimiento de la información. Desarrollé TrustyWeb, una extensión full stack para Chrome construida sobre la API de ChatGPT.' },
+        { period: 'Verano 2024', name: 'HackPuebla', result: 'Ganador estatal', text: 'Un hackatón organizado por Ellucian y Forvia sobre discernimiento de la información. Desarrollé TrustyWeb, una extensión full stack para Chromium construida sobre la API de OpenAI.' },
         { period: 'Primavera 2024', name: 'ETH Cinco de Mayo Hackathon', text: 'Construí una aplicación web sobre blockchain para transacciones en videojuegos competitivos, con MetaMask, Astar y Remix Ethereum IDE.' },
         { period: 'Otoño 2023', name: 'MAAC, Mission Alignment Community Challenge', result: 'Ganador nacional', text: 'Desarrollé una app educativa alineada con la Agenda 2030 de la ONU que usa realidad aumentada para involucrar a los estudiantes. Diseñada en Figma y construida con Swift, SwiftUI y Reality Composer.' },
         { period: 'Verano 2023', name: 'iOS Community Changers', text: 'Desarrollé una app de salud mental para una competencia nacional, enfocada en el manejo de la ansiedad con una experiencia inmersiva: un jardín virtual tranquilo hecho con Reality Composer y una interfaz en SwiftUI.' },
@@ -425,8 +436,17 @@ export const content = {
     },
     contact: {
       title: 'Hablemos',
-      text: 'Abierto a proyectos interesantes, oportunidades y conversaciones sobre agentes de IA. Lo más rápido es escribirme por correo o LinkedIn.',
+      text: 'Abierto a proyectos interesantes, oportunidades y conversaciones sobre agentes de IA. Déjame un mensaje aquí o escríbeme por correo o LinkedIn.',
       email: 'Envíame un correo',
+    },
+    form: {
+      name: 'Nombre',
+      email: 'Correo',
+      message: 'Mensaje',
+      send: 'Enviar mensaje',
+      sending: 'Enviando…',
+      sent: 'Mensaje enviado. Te responderé pronto.',
+      error: 'No se pudo enviar el mensaje. Intenta de nuevo o escríbeme por correo.',
     },
     footer: 'Hecho con Astro y Three.js.',
   },

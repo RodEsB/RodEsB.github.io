@@ -30,13 +30,20 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang={lang} href={canonical} />
     <link rel="alternate" hreflang={lang === 'en' ? 'es' : 'en'} href={new URL(altPath, Astro.site)} />
+    <link rel="alternate" hreflang="x-default" href={lang === 'en' ? canonical : new URL(altPath, Astro.site)} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     <meta name="theme-color" content="#0A0714" />
+    <meta property="og:locale" content={lang === 'en' ? 'en_US' : 'es_MX'} />
+    <meta property="og:site_name" content="Rodrigo Espíritu Berra" />
+    <meta name="twitter:card" content="summary" />
+    <slot name="head" />
   </head>
   <body>
     <a class="skip" href="#main">{t.skip}</a>
@@ -117,6 +124,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     --ink: #efeaff;
     --muted: #aaa0cf;
     --accent: #7a5cff;
+    --accent-strong: #6847f5; /* fondo de botones: contraste AA con texto blanco */
     --accent-soft: #c9bbff;
     --display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif;
     --body: 'Instrument Sans Variable', 'Instrument Sans', system-ui, sans-serif;
@@ -221,13 +229,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     font-weight: 600;
     text-decoration: none;
     color: #fff;
-    background: var(--accent);
-    border: 1px solid var(--accent);
+    background: var(--accent-strong);
+    border: 1px solid var(--accent-strong);
     border-radius: 999px;
     padding: 0.8rem 1.5rem;
     transition: background 0.15s, border-color 0.15s, color 0.15s;
   }
-  .btn:hover { background: #6847f5; border-color: #6847f5; }
+  .btn:hover { background: #5a39e6; border-color: #5a39e6; }
   .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
   .btn.ghost:hover { border-color: var(--accent-soft); background: transparent; }
   .top nav .btn.small { padding: 0.4rem 1rem; font-size: 0.9rem; color: #fff; }

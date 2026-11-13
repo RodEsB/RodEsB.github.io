@@ -1,0 +1,104 @@
+---
+// Formulario de contacto. Los mensajes llegan por correo a través de Formspree.
+// El ID del formulario se configura en src/i18n/content.ts (links.formspree).
+import { content, links, type Lang } from '../i18n/content';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const f = content[lang].form;
+const action = `https://formspree.io/f/${links.formspree}`;
+---
+
+<form class="contact-form" action={action} method="POST" data-sending={f.sending} data-sent={f.sent} data-error={f.error}>
+  <div class="row">
+    <label>
+      <span>{f.name}</span>
+      <input type="text" name="name" autocomplete="name" required maxlength="120" />
+    </label>
+    <label>
+      <span>{f.email}</span>
+      <input type="email" name="email" autocomplete="email" required maxlength="160" />
+    </label>
+  </div>
+  <label>
+    <span>{f.message}</span>
+    <textarea name="message" rows="5" required maxlength="4000"></textarea>
+  </label>
+  <!-- Campo trampa contra spam: las personas no lo ven -->
+  <input class="trap" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" />
+  <input type="hidden" name="_language" value={lang} />
+  <div class="actions">
+    <button class="btn" type="submit">{f.send}</button>
+    <p class="status" role="status" aria-live="polite"></p>
+  </div>
+</form>
+
+<style>
+  .contact-form {
+    display: grid;
+    gap: 1.1rem;
+    max-width: 44rem;
+    margin-top: 2.2rem;
+    padding: clamp(1.3rem, 3vw, 2rem);
+    background: rgba(21, 16, 41, 0.72);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+  label { display: grid; gap: 0.4rem; }
+  label span { font-size: 0.92rem; font-weight: 600; color: var(--muted); }
+  input, textarea {
+    font: inherit;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.7rem 0.85rem;
+    transition: border-color 0.15s;
+  }
+  textarea { resize: vertical; min-height: 8rem; }
+  input:hover, textarea:hover { border-color: #463b80; }
+  input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 1px; border-color: var(--accent); }
+  .trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem 1.2rem; }
+  .actions .btn { cursor: pointer; font-size: 1rem; }
+  .actions .btn:disabled { opacity: 0.6; cursor: progress; }
+  .status { color: var(--muted); }
+  .status.ok { color: var(--accent-soft); font-weight: 600; }
+  .status.err { color: #ffb86b; }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  // Envía sin salir de la página; si falla el script, el formulario se envía de forma normal.
+  document.querySelectorAll<HTMLFormElement>('.contact-form').forEach((form) => {
+    const status = form.querySelector<HTMLElement>('.status')!;
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.className = 'status';
+      status.textContent = form.dataset.sending ?? '';
+      button.disabled = true;
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        form.reset();
+        status.className = 'status ok';
+        status.textContent = form.dataset.sent ?? '';
+      } catch {
+        status.className = 'status err';
+        status.textContent = form.dataset.error ?? '';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  });
+</script>
