@@ -1,0 +1,159 @@
+---
+// Ilustración animada del asistente de onboarding: la documentación alimenta
+// una base de conocimiento y el asistente responde en el chat citando sus fuentes.
+interface Props {
+  label: string;
+  question: string;
+  kb: string;
+  sources: string;
+}
+const { label, question, kb, sources } = Astro.props;
+const docs = [20, 68, 116];
+---
+
+<svg class="onb" viewBox="0 0 460 410" role="img" aria-label={label}>
+  <!-- Documentos que alimentan la base de conocimiento -->
+  {docs.map((x) => (
+    <g class="doc">
+      <path d={`M${x} 22 h22 l10 10 v32 h-32 z`} />
+      <path class="doc-lines" d={`M${x + 7} 40 h18 M${x + 7} 48 h18 M${x + 7} 56 h12`} />
+    </g>
+  ))}
+  <path class="feed" d="M162 44 H222" />
+
+  <!-- Base de conocimiento -->
+  <g class="kb">
+    <path class="kb-body" d="M230 30 v30 c0 8 60 8 60 0 v-30" />
+    <ellipse class="kb-top" cx="260" cy="30" rx="30" ry="9" />
+    <path class="kb-ring" d="M230 45 c0 8 60 8 60 0" />
+  </g>
+  <text class="kb-label" x="304" y="49">{kb}</text>
+  <path class="link" d="M260 72 V104" />
+
+  <!-- Ventana de chat -->
+  <rect class="chat" x="14" y="106" width="432" height="290" rx="22" />
+
+  <g class="user">
+    <rect x="212" y="128" width="212" height="44" rx="18" />
+    <text x="318" y="156">{question}</text>
+  </g>
+
+  <g class="avatar">
+    <circle cx="50" cy="222" r="17" />
+    <path d="M50 211 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3 z" />
+  </g>
+
+  <g class="typing">
+    <rect x="78" y="204" width="70" height="38" rx="18" />
+    <circle cx="98" cy="223" r="4" /><circle cx="113" cy="223" r="4" /><circle cx="128" cy="223" r="4" />
+  </g>
+
+  <g class="answer">
+    <rect class="bubble" x="78" y="198" width="282" height="170" rx="18" />
+    <rect class="ln l1" x="98" y="220" width="238" height="8" rx="4" />
+    <rect class="ln l2" x="98" y="240" width="214" height="8" rx="4" />
+    <rect class="ln l3" x="98" y="260" width="160" height="8" rx="4" />
+    <g class="cite">
+      <line x1="98" x2="340" y1="288" y2="288" />
+      <text x="98" y="310">{sources}</text>
+      <g class="chip c1">
+        <rect x="98" y="322" width="112" height="28" rx="14" />
+        <path d="M112 329 h7 l4 4 v10 h-11 z" /><rect class="chip-ln" x="132" y="333" width="62" height="6" rx="3" />
+      </g>
+      <g class="chip c2">
+        <rect x="220" y="322" width="96" height="28" rx="14" />
+        <path d="M234 329 h7 l4 4 v10 h-11 z" /><rect class="chip-ln" x="254" y="333" width="46" height="6" rx="3" />
+      </g>
+    </g>
+  </g>
+</svg>
+
+<style>
+  .onb {
+    width: min(100%, 29rem);
+    height: auto;
+    overflow: visible;
+  }
+  .doc path:first-child { fill: var(--surface); stroke: var(--accent-soft); stroke-width: 1.5; stroke-linejoin: round; }
+  .doc-lines { fill: none; stroke: var(--line); stroke-width: 2; stroke-linecap: round; }
+  .feed, .link { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 2 9; stroke-linecap: round; }
+  .link { opacity: 0.25; }
+  .kb-body { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+  .kb-top { fill: var(--accent); stroke: var(--accent); stroke-width: 2; }
+  .kb-ring { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: 0.7; }
+  .kb-label { font-family: var(--body); font-size: 12.5px; fill: var(--muted); }
+
+  .chat { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+  .user rect { fill: var(--accent); }
+  .user text { font-family: var(--body); font-size: 15px; font-weight: 600; fill: #fff; text-anchor: middle; }
+  .avatar circle { fill: var(--bg); stroke: var(--accent-soft); stroke-width: 1.5; }
+  .avatar path { fill: var(--accent-soft); }
+  .typing rect, .bubble { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+  .typing circle { fill: var(--muted); transform-box: fill-box; transform-origin: center; }
+  .typing { opacity: 0; }
+  .ln { fill: var(--ink); opacity: 0.8; transform-box: fill-box; transform-origin: left center; }
+  .cite line { stroke: var(--line); }
+  .cite text { font-family: var(--body); font-size: 12.5px; fill: var(--muted); }
+  .chip rect:first-child { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+  .chip path { fill: var(--accent-soft); }
+  .chip-ln { fill: var(--accent-soft); opacity: 0.8; }
+
+  /* Ciclo de 10 s: pregunta, búsqueda en la base de conocimiento, respuesta con fuentes */
+  @media (prefers-reduced-motion: no-preference) {
+    .feed { animation: feed 0.9s linear infinite; }
+    .doc { animation: doc 3s ease-in-out infinite; }
+    .doc:nth-child(2) { animation-delay: 0.5s; }
+    .doc:nth-child(3) { animation-delay: 1s; }
+    .user { animation: user 10s ease-out infinite; }
+    .typing { animation: typing 10s linear infinite; }
+    .typing circle { animation: bounce 0.9s ease-in-out infinite; }
+    .typing circle:nth-of-type(2) { animation-delay: 0.15s; }
+    .typing circle:nth-of-type(3) { animation-delay: 0.3s; }
+    .link { animation: feed 0.9s linear infinite, link 10s linear infinite; }
+    .kb { animation: kb 10s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    .answer { animation: answer 10s ease-out infinite; }
+    .l1 { animation: l1 10s ease-out infinite; }
+    .l2 { animation: l2 10s ease-out infinite; }
+    .l3 { animation: l3 10s ease-out infinite; }
+    .cite { animation: cite 10s ease-out infinite; }
+    .c1 { animation: c1 10s ease-out infinite; }
+    .c2 { animation: c2 10s ease-out infinite; }
+  }
+
+  @keyframes feed { to { stroke-dashoffset: -22; } }
+  @keyframes doc { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  @keyframes user {
+    0%, 6% { opacity: 0; transform: translateY(8px); }
+    12%, 93% { opacity: 1; transform: none; }
+    99%, 100% { opacity: 0; transform: none; }
+  }
+  @keyframes typing {
+    0%, 16% { opacity: 0; }
+    19%, 40% { opacity: 1; }
+    43%, 100% { opacity: 0; }
+  }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
+  @keyframes link {
+    0%, 18% { opacity: 0.25; }
+    22%, 42% { opacity: 1; }
+    48%, 100% { opacity: 0.25; }
+  }
+  @keyframes kb {
+    0%, 18% { transform: scale(1); }
+    26% { transform: scale(1.1); }
+    34% { transform: scale(1); }
+    40% { transform: scale(1.08); }
+    46%, 100% { transform: scale(1); }
+  }
+  @keyframes answer {
+    0%, 42% { opacity: 0; transform: translateY(8px); }
+    48%, 93% { opacity: 1; transform: none; }
+    99%, 100% { opacity: 0; transform: none; }
+  }
+  @keyframes l1 { 0%, 47% { transform: scaleX(0); } 54%, 100% { transform: scaleX(1); } }
+  @keyframes l2 { 0%, 53% { transform: scaleX(0); } 60%, 100% { transform: scaleX(1); } }
+  @keyframes l3 { 0%, 59% { transform: scaleX(0); } 66%, 100% { transform: scaleX(1); } }
+  @keyframes cite { 0%, 67% { opacity: 0; } 72%, 100% { opacity: 1; } }
+  @keyframes c1 { 0%, 71% { opacity: 0; transform: translateY(5px); } 76%, 100% { opacity: 1; transform: none; } }
+  @keyframes c2 { 0%, 76% { opacity: 0; transform: translateY(5px); } 81%, 100% { opacity: 1; transform: none; } }
+</style>

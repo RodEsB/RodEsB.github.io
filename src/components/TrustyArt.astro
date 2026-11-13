@@ -1,0 +1,154 @@
+---
+// Ilustración animada de TrustyWeb: se selecciona un texto en una página,
+// la extensión lo analiza y sugiere otras fuentes para comparar.
+interface Props {
+  label: string;
+  analyzing: string;
+  ready: string;
+  sources: string;
+}
+const { label, analyzing, ready, sources } = Astro.props;
+
+const lines = [
+  { y: 128, w: 186 }, { y: 150, w: 172 }, { y: 172, w: 190 },
+  { y: 194, w: 150 }, { y: 226, w: 180 }, { y: 248, w: 190 },
+  { y: 270, w: 164 }, { y: 292, w: 120 },
+];
+---
+
+<svg class="trusty" viewBox="0 0 460 380" role="img" aria-label={label}>
+  <!-- Ventana del navegador -->
+  <rect class="window" x="10" y="20" width="440" height="340" rx="20" />
+  <line class="bar" x1="10" x2="450" y1="66" y2="66" />
+  <circle class="dot" cx="36" cy="43" r="5" /><circle class="dot" cx="54" cy="43" r="5" /><circle class="dot" cx="72" cy="43" r="5" />
+  <rect class="url" x="96" y="32" width="270" height="22" rx="11" />
+  <g class="ext">
+    <circle class="ext-ring" cx="412" cy="43" r="15" />
+    <path class="ext-icon" d="M412 33 l8 3.4 v6.6 c0 6 -4 9.4 -8 11 c-4 -1.6 -8 -5 -8 -11 v-6.6 z" />
+  </g>
+
+  <!-- Página con el texto que se selecciona -->
+  <rect class="title" x="34" y="92" width="150" height="14" rx="7" />
+  <rect class="select s1" x="30" y="143" width="180" height="22" rx="5" />
+  <rect class="select s2" x="30" y="165" width="198" height="22" rx="5" />
+  {lines.map((l) => <rect class="text" x="34" y={l.y} width={l.w} height="8" rx="4" />)}
+
+  <!-- Panel de la extensión -->
+  <g class="panel">
+    <rect class="panel-bg" x="248" y="78" width="188" height="262" rx="16" />
+    <circle class="spinner" cx="342" cy="136" r="38" pathLength="100" />
+    <g class="web">
+      <path d="M342 104 l26 11 v19 c0 17 -12 27 -26 32 c-14 -5 -26 -15 -26 -32 v-19 z" />
+      <path d="M342 104 v62 M316 115 l52 38 M368 115 l-52 38" />
+      <path d="M342 118 l14 6 v10 c0 8 -6 13 -14 16 c-8 -3 -14 -8 -14 -16 v-10 z" />
+    </g>
+    <path class="check" pathLength="100" d="M328 136 l10 10 l19 -22" />
+    <text class="status analyzing" x="342" y="200">{analyzing}</text>
+    <text class="status ready" x="342" y="200">{ready}</text>
+    <line class="divider" x1="266" x2="418" y1="218" y2="218" />
+    <text class="sources" x="266" y="242">{sources}</text>
+    {[0, 1, 2].map((i) => (
+      <g class={`src src${i}`}>
+        <circle cx="272" cy={264 + i * 24} r="4" />
+        <rect x="286" y={260 + i * 24} width={[122, 96, 110][i]} height="8" rx="4" />
+      </g>
+    ))}
+  </g>
+</svg>
+
+<style>
+  .trusty {
+    width: min(100%, 29rem);
+    height: auto;
+    overflow: visible;
+  }
+  .window { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+  .bar { stroke: var(--line); stroke-width: 1.5; }
+  .dot { fill: var(--line); }
+  .url { fill: var(--bg); stroke: var(--line); }
+  .ext-ring { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+  .ext-icon { fill: var(--accent-soft); }
+  .title { fill: var(--ink); opacity: 0.85; }
+  .text { fill: var(--line); }
+  .select { fill: var(--accent); opacity: 0.55; transform-box: fill-box; transform-origin: left center; }
+
+  .panel-bg { fill: var(--bg); stroke: var(--accent); stroke-width: 1.5; }
+  .web path { fill: none; stroke: var(--accent-soft); stroke-width: 1.6; stroke-linejoin: round; }
+  .web path:first-child { fill: rgba(122, 92, 255, 0.18); stroke-width: 2.2; }
+  .spinner { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 22 78; opacity: 0; transform-box: fill-box; transform-origin: center; }
+  .check { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+  .status { font-family: var(--body); font-size: 15px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
+  .status.analyzing { opacity: 0; fill: var(--muted); }
+  .divider { stroke: var(--line); }
+  .sources { font-family: var(--body); font-size: 12.5px; fill: var(--muted); }
+  .src circle { fill: var(--accent); }
+  .src rect { fill: var(--accent-soft); opacity: 0.8; }
+
+  /* Ciclo de 9 s: seleccionar texto, analizar, resultado con fuentes, reinicio */
+  @media (prefers-reduced-motion: no-preference) {
+    .select { animation: select 9s ease-in-out infinite; }
+    .s2 { animation-name: select2; }
+    .ext-ring { animation: ext 9s ease-out infinite; }
+    .panel { animation: panel 9s ease-out infinite; }
+    .spinner { animation: spin 1.1s linear infinite, spinner 9s linear infinite; }
+    .web { animation: web 9s ease-in-out infinite; }
+    .check { stroke-dasharray: 100; animation: check 9s ease-out infinite; }
+    .status.analyzing { animation: analyzing 9s linear infinite; }
+    .status.ready { animation: ready 9s linear infinite; }
+    .divider, .sources { animation: reveal 9s ease-out infinite; }
+    .src0 { animation: src0 9s ease-out infinite; }
+    .src1 { animation: src1 9s ease-out infinite; }
+    .src2 { animation: src2 9s ease-out infinite; }
+  }
+
+  @keyframes select {
+    0%, 8% { transform: scaleX(0); opacity: 0.55; }
+    18%, 92% { transform: scaleX(1); opacity: 0.55; }
+    98%, 100% { transform: scaleX(1); opacity: 0; }
+  }
+  @keyframes select2 {
+    0%, 18% { transform: scaleX(0); opacity: 0.55; }
+    28%, 92% { transform: scaleX(1); opacity: 0.55; }
+    98%, 100% { transform: scaleX(1); opacity: 0; }
+  }
+  @keyframes ext {
+    0%, 28% { opacity: 0; transform: scale(0.7); }
+    31% { opacity: 1; transform: scale(1); }
+    37%, 100% { opacity: 0; transform: scale(1.5); }
+  }
+  @keyframes panel {
+    0%, 31% { opacity: 0; transform: translateY(-8px); }
+    37%, 93% { opacity: 1; transform: none; }
+    98%, 100% { opacity: 0; transform: none; }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spinner {
+    0%, 36% { opacity: 0; }
+    39%, 58% { opacity: 1; }
+    62%, 100% { opacity: 0; }
+  }
+  @keyframes web {
+    0%, 58% { opacity: 1; }
+    64%, 100% { opacity: 0.3; }
+  }
+  @keyframes check {
+    0%, 60% { stroke-dashoffset: 100; }
+    68%, 100% { stroke-dashoffset: 0; }
+  }
+  @keyframes analyzing {
+    0%, 36% { opacity: 0; }
+    39%, 58% { opacity: 1; }
+    61%, 100% { opacity: 0; }
+  }
+  @keyframes ready {
+    0%, 60% { opacity: 0; }
+    64%, 100% { opacity: 1; }
+  }
+  @keyframes reveal {
+    0%, 66% { opacity: 0; }
+    71%, 100% { opacity: 1; }
+  }
+  @keyframes src0 { 0%, 70% { opacity: 0; transform: translateX(-6px); } 75%, 100% { opacity: 1; transform: none; } }
+  @keyframes src1 { 0%, 75% { opacity: 0; transform: translateX(-6px); } 80%, 100% { opacity: 1; transform: none; } }
+  @keyframes src2 { 0%, 80% { opacity: 0; transform: translateX(-6px); } 85%, 100% { opacity: 1; transform: none; } }
+</style>
