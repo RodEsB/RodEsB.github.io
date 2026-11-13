@@ -31,7 +31,7 @@ const other: Lang = lang === 'en' ? 'es' : 'en';
   <section class="hero">
     <h1>
       {t.hero.lines.map((line, i) => (
-        <span class="line"><span style={`--i:${i}`}>{line}</span></span>
+        <span class="line"><span style={`--i:${i}`}>{line}</span>{" "}</span>
       ))}
     </h1>
     <p class="hero-lede">{t.hero.lede}</p>
